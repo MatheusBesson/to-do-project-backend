@@ -1,24 +1,35 @@
+# ==============================
 # Etapa 1: Build da aplicação
-FROM maven:3.9.10-eclipse-temurin-22 AS build
+# ==============================
+FROM maven:3.9.10 AS build
+
+# Instala Java 22
+RUN apt-get update && \
+    apt-get install -y openjdk-22-jdk && \
+    apt-get clean
+
 WORKDIR /app
 
-# Copia os arquivos do projeto
+# Copia arquivos do projeto
 COPY pom.xml .
 COPY src ./src
 COPY mvnw .
 COPY .mvn .mvn
 
-# Gera o JAR (sem rodar os testes para agilizar)
+# Build do projeto sem testes
 RUN ./mvnw clean package -DskipTests
 
+# ==============================
 # Etapa 2: Runtime
-FROM eclipse-temurin:22-jdk
+# ==============================
+FROM openjdk:22-jdk
+
 WORKDIR /app
 
 # Copia o JAR gerado na etapa de build
 COPY --from=build /app/target/*.jar app.jar
 
-# Render define a porta na variável de ambiente PORT
+# Variável de porta para o Render
 ENV PORT=8080
 EXPOSE 8080
 
